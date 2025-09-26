@@ -1,0 +1,192 @@
+# REACTOR Configuration Example
+# Copy this file to config.yml and customize as needed
+
+reactor:
+  # Base domain for all services
+  domain: "reactor.local"
+  
+  # Time zone
+  timezone: "UTC"
+  
+  # Debug mode (true for development, false for production)
+  debug: true
+
+# Elasticsearch configuration
+elasticsearch:
+  # Cluster name
+  cluster_name: "reactor-cluster"
+  
+  # Memory allocation (adjust based on available RAM)
+  memory: "2g"
+  
+  # Data retention (days)
+  retention_days: 30
+  
+  # Number of shards (for single node, keep at 1)
+  shards: 1
+  
+  # Number of replicas (for single node, keep at 0)
+  replicas: 0
+
+# Kibana configuration  
+kibana:
+  # Enable/disable features
+  monitoring: true
+  reporting: true
+  
+  # Session timeout (minutes)
+  session_timeout: 720
+
+# Logstash configuration
+logstash:
+  # Number of pipeline workers
+  workers: 2
+  
+  # Batch size for processing
+  batch_size: 125
+  
+  # Batch delay (ms)
+  batch_delay: 50
+
+# Network monitoring
+zeek:
+  # Network interface to monitor
+  interface: "eth0"
+  
+  # Enable/disable specific analyzers
+  analyzers:
+    http: true
+    ssl: true
+    dns: true
+    ssh: true
+    smtp: true
+    ftp: true
+    
+  # Custom intelligence feeds
+  intel_feeds:
+    - "/opt/zeek/intel/custom-intel.txt"
+
+# Arkime configuration
+arkime:
+  # Interface to capture
+  interface: "eth0"
+  
+  # Maximum file size (GB)
+  max_file_size: 12
+  
+  # PCAP retention (days)
+  pcap_retention: 7
+  
+  # Minimum free space (GB)
+  min_free_space: 5
+
+# The Hive configuration
+thehive:
+  # Organization name
+  organization: "REACTOR"
+  
+  # Default user domain
+  user_domain: "thehive.local"
+  
+  # Enable/disable features
+  features:
+    misp_integration: true
+    cortex_integration: true
+    webhooks: true
+
+# Cortex configuration
+cortex:
+  # Auto-update Docker images
+  auto_update: false
+  
+  # Docker timeout (seconds)
+  docker_timeout: 300
+  
+  # Enable/disable analyzers
+  analyzers:
+    enabled: true
+    auto_update: false
+    
+  responders:
+    enabled: true
+    auto_update: false
+
+# MISP configuration
+misp:
+  # Organization name
+  organization: "REACTOR"
+  
+  # Base URL
+  base_url: "https://misp.reactor.local"
+  
+  # Enable/disable features
+  features:
+    feeds: true
+    correlations: true
+    warnings: true
+
+# Caldera configuration
+caldera:
+  # Enable/disable plugins
+  plugins:
+    atomic: true
+    compass: true
+    debrief: true
+    fieldmanual: true
+    gameboard: true
+    human: true
+    response: true
+    sandcat: true
+    stockpile: true
+    training: true
+    
+  # Contact methods
+  contacts:
+    tcp: true
+    udp: true
+    websocket: true
+    ftp: true
+
+# RabbitMQ configuration
+rabbitmq:
+  # Virtual host
+  vhost: "reactor-vhost"
+  
+  # Memory high watermark
+  memory_watermark: 0.6
+  
+  # Disk free limit (GB)
+  disk_free_limit: 2
+
+# SSL/TLS configuration
+ssl:
+  # Certificate paths (relative to certs/ directory)
+  certificate: "reactor.crt"
+  private_key: "reactor.key"
+  
+  # Protocols
+  protocols:
+    - "TLSv1.2"
+    - "TLSv1.3"
+
+# Logging configuration
+logging:
+  # Log level (DEBUG, INFO, WARN, ERROR)
+  level: "INFO"
+  
+  # Log retention (days)
+  retention: 30
+  
+  # Enable/disable service logs
+  services:
+    elasticsearch: true
+    kibana: true
+    logstash: true
+    nginx: true
+    zeek: true
+    arkime: true
+    thehive: true
+    cortex: true
+    misp: true
+    caldera: true
+    rabbitmq: true

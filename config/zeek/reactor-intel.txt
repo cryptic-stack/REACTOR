@@ -1,0 +1,18 @@
+#fields	indicator	indicator_type	meta.source	meta.do_notice	meta.if_in
+# Example threat intelligence indicators for REACTOR
+# Format: indicator<TAB>type<TAB>source<TAB>do_notice<TAB>if_in
+
+# Known malicious domains
+malware.example.com	Intel::DOMAIN	reactor-intel	T	-
+phishing.example.com	Intel::DOMAIN	reactor-intel	T	-
+c2.badactor.com	Intel::DOMAIN	reactor-intel	T	-
+
+# Known malicious IPs
+192.0.2.100	Intel::ADDR	reactor-intel	T	-
+203.0.113.50	Intel::ADDR	reactor-intel	T	-
+
+# Known malicious file hashes (SHA256)
+d41d8cd98f00b204e9800998ecf8427e	Intel::FILE_HASH	reactor-intel	T	-
+
+# URLs
+http://malware.example.com/payload.exe	Intel::URL	reactor-intel	T	-

@@ -1,0 +1,296 @@
+version: '3.8'
+
+services:
+  # Elasticsearch Cluster
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: reactor-elasticsearch
+    hostname: elasticsearch
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=reactor-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
+      - xpack.security.enabled=true
+      - xpack.security.authc.realms.native.native1.order=0
+      - ELASTIC_PASSWORD=ReactorElastic123!
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+      - ./config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - reactor-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -u elastic:ReactorElastic123! -s http://localhost:9200/_cluster/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.11.0
+    container_name: reactor-kibana
+    hostname: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=ReactorElastic123!
+      - SERVER_HOST=0.0.0.0
+      - SERVER_NAME=reactor-kibana
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    networks:
+      - reactor-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:5601/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Logstash
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.11.0
+    container_name: reactor-logstash
+    hostname: logstash
+    environment:
+      - "LS_JAVA_OPTS=-Xmx1g -Xms1g"
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - ELASTICSEARCH_USERNAME=elastic
+      - ELASTICSEARCH_PASSWORD=ReactorElastic123!
+    volumes:
+      - ./config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./config/logstash/pipelines.yml:/usr/share/logstash/config/pipelines.yml:ro
+      - ./config/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    networks:
+      - reactor-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+  # RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: reactor-rabbitmq
+    hostname: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=reactor
+      - RABBITMQ_DEFAULT_PASS=ReactorRabbit123!
+      - RABBITMQ_DEFAULT_VHOST=reactor-vhost
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./config/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - reactor-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Nginx Reverse Proxy
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: reactor-nginx
+    hostname: nginx
+    volumes:
+      - ./config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./config/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certs:/etc/nginx/certs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - reactor-network
+    depends_on:
+      - kibana
+      - thehive
+      - misp
+      - caldera
+
+  # Zeek Network Monitor
+  zeek:
+    image: zeekurity/zeek:latest
+    container_name: reactor-zeek
+    hostname: zeek
+    volumes:
+      - ./config/zeek:/opt/zeek/etc:ro
+      - zeek_logs:/opt/zeek/logs
+      - ./pcaps:/pcaps:ro
+    networks:
+      - reactor-network
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    command: ["/opt/zeek/bin/zeek", "-i", "eth0", "local"]
+
+  # Arkime
+  arkime:
+    image: arkime/arkime:latest
+    container_name: reactor-arkime
+    hostname: arkime
+    environment:
+      - ARKIME_PASSWORD=ReactorArkime123!
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
+      - ES_USER=elastic
+      - ES_PASSWORD=ReactorElastic123!
+    volumes:
+      - ./config/arkime/config.ini:/opt/arkime/etc/config.ini:ro
+      - arkime_pcap:/opt/arkime/pcap
+      - arkime_logs:/opt/arkime/logs
+    ports:
+      - "8005:8005"
+    networks:
+      - reactor-network
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+
+  # The Hive
+  thehive:
+    image: strangebee/thehive:5.2
+    container_name: reactor-thehive
+    hostname: thehive
+    environment:
+      - JVM_OPTS=-Xms1g -Xmx2g
+    volumes:
+      - ./config/thehive/application.conf:/opt/thp/thehive/conf/application.conf:ro
+      - thehive_data:/opt/thp/thehive/db
+      - thehive_index:/opt/thp/thehive/index
+    ports:
+      - "9000:9000"
+    networks:
+      - reactor-network
+    depends_on:
+      - elasticsearch
+
+  # Cortex
+  cortex:
+    image: thehiveproject/cortex:3.1.7
+    container_name: reactor-cortex
+    hostname: cortex
+    environment:
+      - JVM_OPTS=-Xms1g -Xmx2g
+    volumes:
+      - ./config/cortex/application.conf:/opt/cortex/conf/application.conf:ro
+      - cortex_data:/opt/cortex/db
+    ports:
+      - "9001:9001"
+    networks:
+      - reactor-network
+    depends_on:
+      - elasticsearch
+
+  # MISP
+  misp:
+    image: coolacid/misp-docker:core-latest
+    container_name: reactor-misp
+    hostname: misp
+    environment:
+      - MYSQL_HOST=misp-db
+      - MYSQL_DATABASE=misp
+      - MYSQL_USER=misp
+      - MYSQL_PASSWORD=ReactorMisp123!
+      - MISP_ADMIN_EMAIL=admin@reactor.local
+      - MISP_ADMIN_PASSPHRASE=ReactorMisp123!
+      - MISP_BASEURL=https://misp.reactor.local
+    volumes:
+      - misp_data:/var/www/MISP
+    ports:
+      - "8080:80"
+      - "8443:443"
+    networks:
+      - reactor-network
+    depends_on:
+      - misp-db
+
+  # MISP Database
+  misp-db:
+    image: mysql:8.0
+    container_name: reactor-misp-db
+    hostname: misp-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=ReactorMispRoot123!
+      - MYSQL_DATABASE=misp
+      - MYSQL_USER=misp
+      - MYSQL_PASSWORD=ReactorMisp123!
+    volumes:
+      - misp_db_data:/var/lib/mysql
+      - ./config/misp/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - reactor-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pReactorMispRoot123!"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # MITRE Caldera
+  caldera:
+    image: mitre/caldera:latest
+    container_name: reactor-caldera
+    hostname: caldera
+    environment:
+      - CALDERA_HOST=0.0.0.0
+      - CALDERA_PORT=8888
+    volumes:
+      - ./config/caldera/conf:/opt/caldera/conf:ro
+      - caldera_data:/opt/caldera/data
+    ports:
+      - "8888:8888"
+    networks:
+      - reactor-network
+
+volumes:
+  elasticsearch_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+  zeek_logs:
+    driver: local
+  arkime_pcap:
+    driver: local
+  arkime_logs:
+    driver: local
+  thehive_data:
+    driver: local
+  thehive_index:
+    driver: local
+  cortex_data:
+    driver: local
+  misp_data:
+    driver: local
+  misp_db_data:
+    driver: local
+  caldera_data:
+    driver: local
+
+networks:
+  reactor-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
