@@ -1,0 +1,114 @@
+# Production overrides for REACTOR SIEM
+# Use: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+version: '3.8'
+
+services:
+  elasticsearch:
+    environment:
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
+      - xpack.security.http.ssl.enabled=true
+      - xpack.security.transport.ssl.enabled=true
+    deploy:
+      resources:
+        limits:
+          memory: 6G
+        reservations:
+          memory: 4G
+
+  kibana:
+    environment:
+      - NODE_OPTIONS="--max-old-space-size=2048"
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  logstash:
+    environment:
+      - "LS_JAVA_OPTS=-Xmx2g -Xms2g"
+    deploy:
+      resources:
+        limits:
+          memory: 3G
+        reservations:
+          memory: 2G
+
+  nginx:
+    volumes:
+      # Mount production certificates
+      - /etc/ssl/certs/reactor.crt:/etc/nginx/certs/reactor.crt:ro
+      - /etc/ssl/private/reactor.key:/etc/nginx/certs/reactor.key:ro
+
+  zeek:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  arkime:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  thehive:
+    environment:
+      - JVM_OPTS=-Xms2g -Xmx4g
+    deploy:
+      resources:
+        limits:
+          memory: 5G
+        reservations:
+          memory: 2G
+
+  cortex:
+    environment:
+      - JVM_OPTS=-Xms2g -Xmx4g
+    deploy:
+      resources:
+        limits:
+          memory: 5G
+        reservations:
+          memory: 2G
+
+  misp:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  misp-db:
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MISP_DB_ROOT_PASSWORD:-ChangeThisProductionPassword}
+      - MYSQL_PASSWORD=${MISP_DB_PASSWORD:-ChangeThisProductionPassword}
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  caldera:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+
+  rabbitmq:
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M

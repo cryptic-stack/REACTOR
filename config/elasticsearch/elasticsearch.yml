@@ -1,0 +1,21 @@
+cluster.name: "reactor-cluster"
+node.name: "elasticsearch"
+path.data: /usr/share/elasticsearch/data
+path.logs: /usr/share/elasticsearch/logs
+network.host: 0.0.0.0
+http.port: 9200
+discovery.type: single-node
+
+# Security Configuration
+xpack.security.enabled: true
+xpack.security.authc.realms.native.native1.order: 0
+
+# Disable SSL for internal communication (development setup)
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# Memory settings
+bootstrap.memory_lock: true
+
+# Index settings for better performance
+action.auto_create_index: "+*"

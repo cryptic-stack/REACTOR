@@ -1,0 +1,64 @@
+##
+# CALDERA Configuration for REACTOR
+##
+
+host: 0.0.0.0
+port: 8888
+debug: false
+
+# Authentication
+users:
+  red:
+    red: admin
+    password: ReactorCalderaRed123!
+  blue:
+    blue: admin  
+    password: ReactorCalderaBlue123!
+
+# API key for programmatic access
+api_key: ReactorCalderaApiKey123456789012345678901234567890123456789012
+
+# Encryption settings
+crypt_salt: ReactorCalderaSalt123456789012345678901234567890
+encryption_key: ReactorCalderaEncKey123456789012345678901234567890
+
+# Plugin settings  
+plugins:
+  - atomic
+  - compass
+  - debrief
+  - fieldmanual
+  - gameboard
+  - human
+  - response
+  - sandcat
+  - stockpile
+  - training
+
+# Contact settings
+contact:
+  tunnel.port: 8443
+  tcp: 0.0.0.0:7010
+  udp: 0.0.0.0:7011
+  websocket: 0.0.0.0:7012
+  ftp: 0.0.0.0:2222
+
+# Reporting
+reports:
+  output.dir: /opt/caldera/reports
+
+# Security
+auth:
+  login.handler.module: default
+  logout.handler.module: default
+
+# Database
+data:
+  store: memory
+
+# Logging
+logging:
+  level: INFO
+  loggers:
+    werkzeug: WARNING
+    asyncio: WARNING
