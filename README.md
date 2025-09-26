@@ -15,25 +15,29 @@ This project implements a containerized SIEM (Security Information and Event Man
 
 ### Quick Start
 
-1. Build and start all services:
-   ```bash
-   docker-compose up -d
-   ```
+#### Option 1: Using convenience scripts (Recommended)
+```bash
+# Start the entire SIEM stack
+./start-reactor.sh
 
-2. Access the Kibana dashboard:
-   ```
-   http://localhost
-   ```
+# Stop the SIEM stack
+./stop-reactor.sh
+```
 
-3. Access Elasticsearch directly (for debugging):
-   ```
-   http://localhost/elasticsearch/
-   ```
+#### Option 2: Using Docker Compose directly
+```bash
+# Build and start all services
+docker-compose up -d
 
-4. Stop all services:
-   ```bash
-   docker-compose down
-   ```
+# Stop all services
+docker-compose down
+```
+
+### Access Points
+
+- **Kibana Dashboard**: http://localhost (main interface)
+- **Kibana Direct**: http://localhost:5601
+- **Elasticsearch API**: http://localhost/elasticsearch/ (for debugging)
 
 ### Architecture
 
