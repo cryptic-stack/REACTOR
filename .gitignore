@@ -1,0 +1,34 @@
+# Docker volumes and runtime data
+**/data/
+**/logs/
+
+# Environment files with secrets
+.env.local
+.env.production
+
+# Docker Compose override files
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Elasticsearch data
+/elasticsearch/data/
+
+# Kibana data
+/kibana/data/
+
+# Logstash logs
+/logstash/logs/
+
+# Nginx logs (runtime)
+/nginx/logs/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
